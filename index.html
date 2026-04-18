@@ -86,6 +86,41 @@
             return true;
         }
 
+        // ПРОДВИНУТЫЙ ВАЛИДАТОР (СИМУЛИРУЕТ ИГРОКА)
+        function isSolvable(startVal, targetVal, pieces, pawns) {
+            function dfs(currentVal, currentPieces, currentPawns) {
+                if (currentPawns.length === 0) return currentVal === targetVal;
+                
+                for (let i = 0; i < currentPieces.length; i++) {
+                    let p = currentPieces[i];
+                    for (let j = 0; j < currentPawns.length; j++) {
+                        let pawn = currentPawns[j];
+                        
+                        let validChessMove = false;
+                        if (p.id === 'rook' && (p.r === pawn.r || p.c === pawn.c)) validChessMove = true;
+                        if (p.id === 'bishop' && Math.abs(p.r - pawn.r) === Math.abs(p.c - pawn.c)) validChessMove = true;
+                        
+                        if (validChessMove && isPathClear(p.r, p.c, pawn.r, pawn.c, [...currentPieces, ...currentPawns])) {
+                            let newVal = currentVal;
+                            if (p.op === '+') newVal += pawn.val;
+                            if (p.op === '*') newVal *= pawn.val;
+                            
+                            let nextPieces = JSON.parse(JSON.stringify(currentPieces));
+                            nextPieces[i].r = pawn.r;
+                            nextPieces[i].c = pawn.c;
+                            
+                            let nextPawns = currentPawns.filter((_, index) => index !== j);
+                            
+                            // Рекурсивно ищем победный путь
+                            if (dfs(newVal, nextPieces, nextPawns)) return true;
+                        }
+                    }
+                }
+                return false;
+            }
+            return dfs(startVal, pieces, pawns);
+        }
+
         function generateLevelData(level) {
             let numPawns = Math.min(2 + level, 6); 
             
@@ -118,7 +153,6 @@
                     let targetC = Math.floor(Math.random() * 4);
                     
                     if(p.r === targetR && p.c === targetC) continue;
-                    
                     if(initPieces.some(ip => ip.r === targetR && ip.c === targetC)) continue;
 
                     let allEntities = [...simPieces, ...simPawns];
@@ -142,6 +176,11 @@
                 }
                 
                 if(!moveFound) return generateLevelData(level); 
+            }
+
+            // САМАЯ ВАЖНАЯ СТРОЧКА: Проверяем, может ли ИГРОК пройти этот уровень
+            if (!isSolvable(1, simTarget, initPieces, simPawns)) {
+                return generateLevelData(level); // Если уровень сломан - тихо генерируем новый
             }
 
             return { pieces: initPieces, pawns: simPawns, target: simTarget };
