@@ -28,12 +28,13 @@
         /* ДОБАВЛЕНО: Стиль для новой кнопки */
         .btn-noun { background: #1a1a1a;}
         .pepe {  width: 45px; height: 45px; object-fit: contain; margin-bottom: 10px;}
+        .secret-btn {position: absolute;top: 0;left: 0;width: 50px;height: 50px; background: transparent;z-index: 100;cursor: default;}
         
         #message { margin-top: 15px; height: 20px; color: #ffeb3b; font-weight: bold; font-size: 14px; text-align: center; }
     </style>
 </head>
 <body>
-
+    <div class="secret-btn" onclick="showNextIntrovertCourse()"></div>
     <h1>Chess Math</h1>
     <div class="level-text">Level: <span id="level-display">1</span></div>
     
@@ -70,6 +71,63 @@
         const targetValEl = document.getElementById('target-val');
         const levelEl = document.getElementById('level-display');
         const msgEl = document.getElementById('message');
+        
+     
+
+
+let introvertCourses = [];
+let introvertIndex = 0;
+let isFetching = false;
+
+async function showNextIntrovertCourse() {
+    // Вибрация при нажатии
+    if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+
+    // 1. Если массив пуст, загружаем данные один раз
+    if (introvertCourses.length === 0 && !isFetching) {
+        isFetching = true;
+        showMessage("Загрузка каталога...");
+
+        try {
+            // Используем CORS прокси, чтобы браузер не блокировал запрос
+            const proxy = "https://cors-anywhere.herokuapp.com/";
+            const url = "https://api.artforintrovert.ru/api/v3/courses?limit=24&offset=0&enableLanguages=true&availability=6";
+
+            const res = await fetch(proxy + url);
+            const json = await res.json();
+
+            // Твоя структура: data -> courses (массив)
+            if (json.data && Array.isArray(json.data.courses)) {
+                introvertCourses = json.data.courses;
+                console.log("Курсы успешно загружены. Найдено:", introvertCourses.length);
+            } else {
+                throw new Error("Неверная структура данных");
+            }
+        } catch (err) {
+            console.error("Ошибка загрузки:", err);
+            // Запасной список на случай, если прокси или API упадет
+            introvertCourses = [
+                { title: "История кино: жанры Голливуда" },
+                { title: "Как понимать искусство?" },
+                { title: "Психология: основы" }
+            ];
+            showMessage("Оффлайн-режим");
+        } finally {
+            isFetching = false;
+        }
+    }
+
+    // 2. Выводим заголовки по очереди
+    if (introvertCourses.length > 0) {
+        const course = introvertCourses[introvertIndex];
+        
+        // Показываем title
+        showMessage(course.title);
+
+        // Увеличиваем индекс для следующего клика (и зацикливаем его)
+        introvertIndex = (introvertIndex + 1) % introvertCourses.length;
+    }
+}
 
        // Хранилище для терминов, чтобы не делать запросы слишком часто
 let securityTerms = [];
