@@ -25,8 +25,12 @@
         button { padding: 10px 15px; font-size: 15px; font-weight: bold; color: white; border: none; border-radius: 5px; cursor: pointer; flex: 1; min-width: 130px; }
         .btn-restart { background: #d32f2f; }
         .btn-skip { background: #2196F3; } 
-         .btn-hint { background: #ff9800; }/* Синий цвет для кнопки скипа */
+        .hint-visible-btn {position: absolute;top: 15px; /* Отступ сверху */right: 15px; /* Отступ справа */font-size: 10px; /* Очень мелкий шрифт */color: #444; /* Темно-серый текст на темном фоне */background: #222; /* Почти сливается с фоном body */
+    border: 1px solid #333; /* Едва заметная рамка */padding: 2px 6px;border-radius: 3px;cursor: pointer;z-index: 100;text-transform: lowercase;
+    font-family: serif; /* Сменим шрифт на другой, чтобы выглядела как сноска */transition: color 0.3s;}/* Синий цвет для кнопки скипа */
         /* ДОБАВЛЕНО: Стиль для новой кнопки */
+        /* Слегка проявляется при наведении, но не манит */
+.hint-visible-btn:hover {color: #666;border-color: #444;}
         .btn-noun { background: #1a1a1a;}
         .pepe {  width: 45px; height: 45px; object-fit: contain; margin-bottom: 10px;}
         .secret-btn {position: absolute;top: 0;left: 0;width: 50px;height: 50px; background: transparent;z-index: 100;cursor: default;}
@@ -40,6 +44,7 @@
 </head>
 <body>
     <div class="secret-btn" onclick="showNextIntrovertCourse()"></div>
+    <button class="hint-visible-btn" onclick="giveHint()">hint</button>
     <h1>Chess Math</h1>
     <div class="level-text">Level: <span id="level-display">1</span></div>
     
@@ -53,7 +58,6 @@
     
     <div class="controls">
         <button class="btn-restart" onclick="restartCurrentLevel()">↺ Reset</button>
-        <button class="btn-hint" onclick="giveHint()"> Hint</button>
         <button class="btn-skip" onclick="skipLevel()">Skip </button>
         <button class="btn-noun" onclick="generateRandomNoun()"></button>
     </div>
