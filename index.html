@@ -24,12 +24,17 @@
         .controls { margin-top: 20px; display: flex; gap: 10px; width: 300px; justify-content: center; flex-wrap: wrap; }
         button { padding: 10px 15px; font-size: 15px; font-weight: bold; color: white; border: none; border-radius: 5px; cursor: pointer; flex: 1; min-width: 130px; }
         .btn-restart { background: #d32f2f; }
-        .btn-skip { background: #2196F3; } /* Синий цвет для кнопки скипа */
+        .btn-skip { background: #2196F3; } 
+         .btn-hint { background: #ff9800; }/* Синий цвет для кнопки скипа */
         /* ДОБАВЛЕНО: Стиль для новой кнопки */
         .btn-noun { background: #1a1a1a;}
         .pepe {  width: 45px; height: 45px; object-fit: contain; margin-bottom: 10px;}
         .secret-btn {position: absolute;top: 0;left: 0;width: 50px;height: 50px; background: transparent;z-index: 100;cursor: default;}
-        
+            
+.hint-piece { outline: 5px solid #ff9800 !important; outline-offset: -5px; z-index: 15;animation: pulse-hint 1s infinite;}
+.hint-target {outline: 5px solid #2196F3 !important; outline-offset: -5px; z-index: 15; animation: pulse-hint 1s infinite;}
+
+@keyframes pulse-hint {0% { box-shadow: inset 0 0 10px #fff; opacity: 1; }50% { box-shadow: inset 0 0 30px #fff; opacity: 0.7; }100% { box-shadow: inset 0 0 10px #fff; opacity: 1; }}
         #message { margin-top: 15px; height: 20px; color: #ffeb3b; font-weight: bold; font-size: 14px; text-align: center; }
     </style>
 </head>
@@ -48,7 +53,8 @@
     
     <div class="controls">
         <button class="btn-restart" onclick="restartCurrentLevel()">↺ Reset</button>
-        <button class="btn-skip" onclick="skipLevel()">Skip ⏭</button>
+        <button class="btn-hint" onclick="giveHint()"> Hint</button>
+        <button class="btn-skip" onclick="skipLevel()">Skip </button>
         <button class="btn-noun" onclick="generateRandomNoun()"></button>
     </div>
 
@@ -71,7 +77,81 @@
         const targetValEl = document.getElementById('target-val');
         const levelEl = document.getElementById('level-display');
         const msgEl = document.getElementById('message');
+
+         function solve(val, ps, pns) {
+            if (pns.length === 0) return val === targetVal ? [] : null;
+
+            for (let i = 0; i < ps.length; i++) {
+                let p = ps[i];
+                for (let j = 0; j < pns.length; j++) {
+                    let pawn = pns[j];
+                    
+                    let canReach = false;
+                    if (p.id === 'rook' && (p.r === pawn.r || p.c === pawn.c)) canReach = true;
+                    if (p.id === 'bishop' && Math.abs(p.r - pawn.r) === Math.abs(p.c - pawn.c)) canReach = true;
+                    
+                    if (canReach && isPathClear(p.r, p.c, pawn.r, pawn.c, [...ps, ...pns])) {
+                        let newVal = val;
+                        if (p.op === '+') newVal += pawn.val;
+                        if (p.op === '*') newVal *= pawn.val;
+
+                        let nextPs = JSON.parse(JSON.stringify(ps));
+                        nextPs[i].r = pawn.r;
+                        nextPs[i].c = pawn.c;
+                        let nextPns = pns.filter((_, idx) => idx !== j);
+
+                        let res = solve(newVal, nextPs, nextPns);
+                        if (res !== null) {
+                            return [{ pieceId: p.id, targetR: pawn.r, targetC: pawn.c, pawnVal: pawn.val }, ...res];
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        function giveHint() {
+            const solution = solve(currentVal, pieces, pawns);
+            
+            if (!solution) {
+                showMessage("Из этой позиции нет решения! Нажми Reset.");
+                if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+                return;
+            }
+
+            const nextMove = solution[0];
+            highlightHint(nextMove);
+            
+            const pieceName = nextMove.pieceId === 'rook' ? 'Ладью' : 'Слона';
+            showMessage(`Ходи: ${pieceName} на пешку ${nextMove.pawnVal}`);
+            if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+        }
+
+        function highlightHint(move) {
+    const cells = document.querySelectorAll('.cell');
+    
+    cells.forEach((cell, index) => {
+        const r = Math.floor(index / 4);
+        const c = index % 4;
+
+        // 1. Ищем клетку, где стоит нужная фигура
+        const isPiece = pieces.some(p => p.id === move.pieceId && p.r === r && p.c === c);
         
+        // 2. Ищем клетку, где стоит целевая пешка
+        const isTarget = (r === move.targetR && c === move.targetC);
+
+        if (isPiece) {
+            cell.classList.add('hint-piece');
+            setTimeout(() => cell.classList.remove('hint-piece'), 3000);
+        }
+
+        if (isTarget) {
+            cell.classList.add('hint-target');
+            setTimeout(() => cell.classList.remove('hint-target'), 3000);
+        }
+    });
+}
+
      
 
 
