@@ -26,7 +26,8 @@
         .btn-restart { background: #d32f2f; }
         .btn-skip { background: #2196F3; } /* Синий цвет для кнопки скипа */
         /* ДОБАВЛЕНО: Стиль для новой кнопки */
-        .btn-noun { background: #1a1a1a; } 
+        .btn-noun { background: #1a1a1a;}
+        .pepe {  width: 45px; height: 45px; object-fit: contain; margin-bottom: 10px;}
         
         #message { margin-top: 15px; height: 20px; color: #ffeb3b; font-weight: bold; font-size: 14px; text-align: center; }
     </style>
@@ -69,43 +70,58 @@
         const targetValEl = document.getElementById('target-val');
         const levelEl = document.getElementById('level-display');
         const msgEl = document.getElementById('message');
-        // ОБНОВЛЕНО: Функция делает запрос к Викисловарю
-        async function generateRandomNoun() {
-            // Показываем пользователю, что пошел запрос
-            showMessage("Ищу слово...");
-            if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
 
-            try {
-                // Делаем запрос к API Викисловаря за 1 случайной статьей
-                const response = await fetch('https://ru.wiktionary.org/w/api.php?action=query&list=random&rnnamespace=0&rnlimit=1&format=json&origin=*');
+       // Хранилище для терминов, чтобы не делать запросы слишком часто
+let securityTerms = [];
+
+async function generateRandomNoun() {
+    showMessage("Ищу термин... 🔒");
+    if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+
+    try {
+        // Если список пуст, загружаем термины из категорий ИБ и Криптографии
+        if (securityTerms.length === 0) {
+            // Запросы к API Википедии для получения названий статей из категорий
+            const categories = ['Информационная_безопасность', 'Криптография'];
+            
+            for (let cat of categories) {
+                const url = `https://ru.wikipedia.org/w/api.php?action=query&list=categorymembers&cmtitle=Category:${cat}&cmlimit=500&format=json&origin=*`;
+                const response = await fetch(url);
                 const data = await response.json();
-
-                // Берем заголовок статьи
-                let randomWord = data.query.random[0].title;
-
-                // Убираем возможные уточнения в скобках (например, "коса (инструмент)")
-                randomWord = randomWord.split(' (')[0];
                 
-                // Делаем первую букву заглавной для красоты
-                randomWord = randomWord.charAt(0).toUpperCase() + randomWord.slice(1);
-
-                // Показываем слово
-                showMessage("Слово: " + randomWord);
-                if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-
-            } catch (error) {
-                // Если нет интернета или API не ответил
-                showMessage("Ошибка загрузки!");
-                console.error("Ошибка при получении слова:", error);
+                // Фильтруем: убираем служебные страницы и категории
+                const items = data.query.categorymembers
+                    .map(item => item.title)
+                    .filter(title => !title.includes("Категория:") && !title.includes("Файл:"));
+                
+                securityTerms.push(...items);
             }
+            
+            // Добавляем немного классики вручную на случай сбоя API
+            securityTerms.push("Блокчейн", "Хэширование", "Брутфорс", "Фишинг", "Двухфакторная аутентификация", "SQL-инъекция", "Межсетевой экран", "Шифр Цезаря", "Стеганография", "Троянская программа");
         }
 
-        // Чтобы сообщение висело чуть дольше (увеличил до 3.5 секунд)
+        // Выбираем случайный термин
+        const randomIndex = Math.floor(Math.random() * securityTerms.length);
+        let term = securityTerms[randomIndex];
+
+        // Убираем уточнения в скобках, если они есть
+        term = term.split(' (')[0];
+
+        showMessage(term);
+        if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+
+    } catch (error) {
+        showMessage("Ошибка доступа к базе");
+        console.error("Ошибка:", error);
+    }
+}
+        
         let messageTimeout;
         function showMessage(text) {
             msgEl.innerText = text;
             clearTimeout(messageTimeout);
-            messageTimeout = setTimeout(() => { msgEl.innerText = ''; }, 3500);
+            messageTimeout = setTimeout(() => { msgEl.innerText = ''; }, 5500);
         }
 
 
@@ -226,7 +242,7 @@
                 let randomPawnIndex = Math.floor(Math.random() * simPawns.length);
                 
                 // Меняем ее значок на картинку Пепе
-                simPawns[randomPawnIndex].symbol = '<img src="https://pngicon.ru/file/uploads/ljagushonok-pepe-64x61.png" class="pepe" alt="Pepe">';
+                simPawns[randomPawnIndex].symbol = '<img src="https://pngicon.ru/file/uploads/ljagushonok-pepe-64x61.png" class="pepe" alt="🐸">';
                 
             }
             
