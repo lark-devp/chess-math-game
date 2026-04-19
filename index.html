@@ -220,6 +220,16 @@
                 return generateLevelData(level); // Если уровень сломан - тихо генерируем новый
             }
 
+            // ДОБАВЛЕНО: Шанс 2% на появление Пепе
+            if (Math.random() < 0.02) {
+                // Выбираем случайную пешку из созданных
+                let randomPawnIndex = Math.floor(Math.random() * simPawns.length);
+                
+                // Меняем ее значок на картинку Пепе
+                simPawns[randomPawnIndex].symbol = '<img src="https://pngicon.ru/file/uploads/ljagushonok-pepe-64x61.png" class="pepe" alt="Pepe">';
+                
+            }
+            
             return { pieces: initPieces, pawns: simPawns, target: simTarget };
         }
 
