@@ -25,12 +25,12 @@
         button { padding: 10px 15px; font-size: 15px; font-weight: bold; color: white; border: none; border-radius: 5px; cursor: pointer; flex: 1; min-width: 130px; }
         .btn-restart { background: #d32f2f; }
         .btn-skip { background: #2196F3; } 
-        .hint-visible-btn {position: absolute;top: 15px; /* Отступ сверху */right: 15px; /* Отступ справа */font-size: 10px; /* Очень мелкий шрифт */color: #444; /* Темно-серый текст на темном фоне */background: #222; /* Почти сливается с фоном body */
-    border: 1px solid #333; /* Едва заметная рамка */padding: 2px 6px;border-radius: 3px;cursor: pointer;z-index: 100;text-transform: lowercase;
-    font-family: serif; /* Сменим шрифт на другой, чтобы выглядела как сноска */transition: color 0.3s;}/* Синий цвет для кнопки скипа */
+        .hint-visible-btn {position: absolute;top: 10px;right: 10px;font-size: 10px;color: #444;background: transparent; /* Можно оставить прозрачным для минимализма */border: 1px solid #333;
+    padding: 1px 3px;         /* Минимум пространства вокруг текста */min-width: 0 !important;  /* Сбрасываем общие настройки кнопок */width: auto !important;   /* Ширина только по контенту */height: auto !important;  /* Высота только по контенту */line-height: 1;           /* Убираем межстрочные интервалы */
+    border-radius: 2px;cursor: pointer;z-index: 100;text-transform: lowercase;transition: all 0.2s;}/* Синий цвет для кнопки скипа */
         /* ДОБАВЛЕНО: Стиль для новой кнопки */
         /* Слегка проявляется при наведении, но не манит */
-.hint-visible-btn:hover {color: #666;border-color: #444;}
+.hint-visible-btn:hover {color: #888;border-color: #555;}
         .btn-noun { background: #1a1a1a;}
         .pepe {  width: 45px; height: 45px; object-fit: contain; margin-bottom: 10px;}
         .secret-btn {position: absolute;top: 0;left: 0;width: 50px;height: 50px; background: transparent;z-index: 100;cursor: default;}
