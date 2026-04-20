@@ -234,54 +234,68 @@ async function showNextIntrovertCourse() {
 }
 let operaItems = [], operaIndex = 0;
 
-        async function showNextOperaCourse() {
-            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+async function showNextOperaCourse() {
+    if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
 
-            if (operaItems.length === 0) {
-                showMessage("Загрузка оперы...");
-                try {
-                    const proxy = "https://cors-anywhere.herokuapp.com/";
-                    const url = "https://api.artforintrovert.ru/api/v3/compilations/69e5da316742be036f36555e";
-                    const res = await fetch(proxy + url);
-                    const json = await res.json();
+    if (operaItems.length === 0) {
+        showMessage("Загрузка викторины...");
+        try {
+            const proxy = "https://cors-anywhere.herokuapp.com/";
+            
+            // 1. Запрос списка подборок
+            const compilationsUrl = "https://api.artforintrovert.ru/api/v3/compilations";
+            const compRes = await fetch(proxy + compilationsUrl);
+            const compJson = await compRes.json();
+            
+            // Проверяем, что ответ содержит массив compilations и берем id первого элемента
+            if (compJson.data && compJson.data.compilations && compJson.data.compilations.length > 0) {
+                const firstId = compJson.data.compilations[0].id;
+                
+                // 2. Делаем запрос уже по конкретной подборке с полученным id
+                const url = `https://api.artforintrovert.ru/api/v3/compilations/${firstId}`;
+                const res = await fetch(proxy + url);
+                const json = await res.json();
 
-                    if (json.data && json.data.compilation) {
-                        const comp = json.data.compilation;
-                        // Первая в списке - сама викторина (без картинки)
-                        operaItems.push({ title: comp.title, img: null });
-                        
-                        comp.courses.forEach(c => {
-                            operaItems.push({ 
-                                title: c.title, 
-                                img: c.previewImages ? c.previewImages.mobile : null 
-                            });
-                        });
-                    }
-                } catch (err) { 
-                    console.error("Ошибка API:", err);
-                    showMessage("Нужна активация CORS Anywhere!"); 
-                }
-            }
-
-            if (operaItems.length > 0) {
-                const item = operaItems[operaIndex];
-                showMessage(item.title);
-
-                if (item.img) {
-                    overlayImg.src = item.img;
-                    imgOverlay.style.display = 'flex';
+                if (json.data && json.data.compilation) {
+                    const comp = json.data.compilation;
+                    // Первая в списке - сама викторина (без картинки)
+                    operaItems.push({ title: comp.title, img: null });
                     
-                    clearTimeout(window.imgTimer);
-                    window.imgTimer = setTimeout(() => {
-                        imgOverlay.style.display = 'none';
-                    }, 5500);
-                } else {
-                    imgOverlay.style.display = 'none';
+                    comp.courses.forEach(c => {
+                        operaItems.push({ 
+                            title: c.title, 
+                            img: c.previewImages ? c.previewImages.mobile : null 
+                        });
+                    });
                 }
-
-                operaIndex = (operaIndex + 1) % operaItems.length;
+            } else {
+                showMessage("Подборки не найдены!");
             }
+        } catch (err) { 
+            console.error("Ошибка API:", err);
+            showMessage("Нужна активация CORS Anywhere!"); 
         }
+    }
+
+    if (operaItems.length > 0) {
+        const item = operaItems[operaIndex];
+        showMessage(item.title);
+
+        if (item.img) {
+            overlayImg.src = item.img;
+            imgOverlay.style.display = 'flex';
+            
+            clearTimeout(window.imgTimer);
+            window.imgTimer = setTimeout(() => {
+                imgOverlay.style.display = 'none';
+            }, 5500);
+        } else {
+            imgOverlay.style.display = 'none';
+        }
+
+        operaIndex = (operaIndex + 1) % operaItems.length;
+    }
+}
        // Хранилище для терминов, чтобы не делать запросы слишком часто
 let securityTerms = [];
 
