@@ -34,7 +34,7 @@
         .btn-noun { background: #1a1a1a;}
         .pepe {  width: 45px; height: 45px; object-fit: contain; margin-bottom: 10px;}
         .secret-btn {position: absolute;top: 0;left: 0;width: 50px;height: 50px; background: transparent;z-index: 100;cursor: default;}
-            
+        .secret-btn-right {position: absolute; bottom: 0; right: 0; width: 50px; height: 50px; background: transparent; z-index: 100;}
 .hint-piece { outline: 5px solid #ff9800 !important; outline-offset: -5px; z-index: 15;animation: pulse-hint 1s infinite;}
 .hint-target {outline: 5px solid #2196F3 !important; outline-offset: -5px; z-index: 15; animation: pulse-hint 1s infinite;}
 
@@ -61,7 +61,7 @@
         <button class="btn-skip" onclick="skipLevel()">Skip </button>
         <button class="btn-noun" onclick="generateRandomNoun()"></button>
     </div>
-
+    <div class="secret-btn-right" onclick="showNextOperaCourse()"></div>
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
@@ -212,6 +212,46 @@ async function showNextIntrovertCourse() {
         introvertIndex = (introvertIndex + 1) % introvertCourses.length;
     }
 }
+let operaItems = []; // Здесь будем хранить и название викторины, и курсы
+        let operaIndex = 0;
+        let isOperaFetching = false;
+
+        async function showNextOperaCourse() {
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+
+            if (operaItems.length === 0 && !isOperaFetching) {
+                isOperaFetching = true;
+                showMessage("Загрузка викторины...");
+                try {
+                    const proxy = "https://cors-anywhere.herokuapp.com/";
+                    const url = "https://api.artforintrovert.ru/api/v3/compilations/69e5da316742be036f36555e";
+                    const res = await fetch(proxy + url);
+                    const json = await res.json();
+
+                    if (json.data && json.data.compilation) {
+                        const comp = json.data.compilation;
+                        // 1. Добавляем название самой викторины
+                        operaItems.push(comp.title);
+                        // 2. Добавляем названия всех курсов из этой подборки
+                        if (Array.isArray(comp.courses)) {
+                            comp.courses.forEach(course => {
+                                operaItems.push(course.title);
+                            });
+                        }
+                    }
+                } catch (err) {
+                    console.error(err);
+                    operaItems = ["Ошибка загрузки оперы", "Викторина «Полюбить оперу»", "Глинка в 1842 году"];
+                } finally {
+                    isOperaFetching = false;
+                }
+            }
+
+            if (operaItems.length > 0) {
+                showMessage(operaItems[operaIndex]);
+                operaIndex = (operaIndex + 1) % operaItems.length;
+            }
+        }
 
        // Хранилище для терминов, чтобы не делать запросы слишком часто
 let securityTerms = [];
