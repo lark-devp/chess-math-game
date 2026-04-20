@@ -12,7 +12,11 @@
         .level-text { font-size: 14px; color: #aaa; margin-bottom: 15px; }
         .hud { display: flex; justify-content: space-between; width: 300px; background: #333; padding: 10px; border-radius: 8px; margin-bottom: 20px; box-sizing: border-box; }
         .hud div { font-size: 20px; font-weight: bold; }
+         .board-container { position: relative; width: 300px; height: 300px; }
         #board { display: grid; grid-template-columns: repeat(4, 75px); grid-template-rows: repeat(4, 75px); border: 4px solid #333; border-radius: 4px; overflow: hidden; }
+        #image-overlay {position: absolute;top: 0; left: 0;width: 100%; height: 100%;display: none; /* Скрыта по умолчанию */z-index: 50;background-color: rgba(0,0,0,0.7);border-radius: 4px;
+        justify-content: center;align-items: center;pointer-events: none; /* Чтобы не мешала кликам, когда исчезает */}
+        #image-overlay img {max-width: 90%;max-height: 90%;border: 2px solid white;border-radius: 8px;object-fit: cover;}
         .cell { width: 75px; height: 75px; display: flex; justify-content: center; align-items: center; font-size: 36px; cursor: pointer; position: relative; user-select: none; }
         .light { background-color: var(--board-light); color: #333; }
         .dark { background-color: var(--board-dark); color: #111; }
@@ -53,7 +57,10 @@
         <div>Goal: <span id="target-val">0</span></div>
     </div>
 
-    <div id="board"></div>
+    <div class="board-container">
+        <div id="board"></div>
+        <div id="image-overlay"><img src="" id="overlay-img"></div>
+    </div>
     <div id="message"></div>
     
     <div class="controls">
@@ -76,12 +83,10 @@
         let startPieces = []; 
         let startPawns = [];  
 
-        const boardEl = document.getElementById('board');
-        const currentValEl = document.getElementById('current-val');
-        const targetValEl = document.getElementById('target-val');
-        const levelEl = document.getElementById('level-display');
-        const msgEl = document.getElementById('message');
-
+       const boardEl = document.getElementById('board'), currentValEl = document.getElementById('current-val');
+        const targetValEl = document.getElementById('target-val'), levelEl = document.getElementById('level-display'), msgEl = document.getElementById('message');
+        const imgOverlay = document.getElementById('image-overlay'), overlayImg = document.getElementById('overlay-img');
+        
          function solve(val, ps, pns) {
             if (pns.length === 0) return val === targetVal ? [] : null;
 
@@ -183,6 +188,10 @@ async function showNextIntrovertCourse() {
             // Твоя структура: data -> courses (массив)
             if (json.data && Array.isArray(json.data.courses)) {
                 introvertCourses = json.data.courses;
+                introvertCourses = json.data.courses.map(c => ({
+                    title: c.title,
+                    img: c.previewImages ? c.previewImages.mobile : null
+                }));
                 console.log("Курсы успешно загружены. Найдено:", introvertCourses.length);
             } else {
                 throw new Error("Неверная структура данных");
@@ -207,21 +216,29 @@ async function showNextIntrovertCourse() {
         
         // Показываем title
         showMessage(course.title);
+        if (course.img) {
+            overlayImg.src = course.img;
+            imgOverlay.style.display = 'flex';
+            
+            clearTimeout(window.imgTimer);
+            window.imgTimer = setTimeout(() => {
+                imgOverlay.style.display = 'none';
+            }, 5500);
+        } else {
+            imgOverlay.style.display = 'none';
+        }
 
         // Увеличиваем индекс для следующего клика (и зацикливаем его)
         introvertIndex = (introvertIndex + 1) % introvertCourses.length;
     }
 }
-let operaItems = []; // Здесь будем хранить и название викторины, и курсы
-        let operaIndex = 0;
-        let isOperaFetching = false;
+let operaItems = [], operaIndex = 0;
 
         async function showNextOperaCourse() {
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
 
-            if (operaItems.length === 0 && !isOperaFetching) {
-                isOperaFetching = true;
-                showMessage("Загрузка викторины...");
+            if (operaItems.length === 0) {
+                showMessage("Загрузка оперы...");
                 try {
                     const proxy = "https://cors-anywhere.herokuapp.com/";
                     const url = "https://api.artforintrovert.ru/api/v3/compilations/69e5da316742be036f36555e";
@@ -230,29 +247,41 @@ let operaItems = []; // Здесь будем хранить и название
 
                     if (json.data && json.data.compilation) {
                         const comp = json.data.compilation;
-                        // 1. Добавляем название самой викторины
-                        operaItems.push(comp.title);
-                        // 2. Добавляем названия всех курсов из этой подборки
-                        if (Array.isArray(comp.courses)) {
-                            comp.courses.forEach(course => {
-                                operaItems.push(course.title);
+                        // Первая в списке - сама викторина (без картинки)
+                        operaItems.push({ title: comp.title, img: null });
+                        
+                        comp.courses.forEach(c => {
+                            operaItems.push({ 
+                                title: c.title, 
+                                img: c.previewImages ? c.previewImages.mobile : null 
                             });
-                        }
+                        });
                     }
-                } catch (err) {
-                    console.error(err);
-                    operaItems = ["Ошибка загрузки оперы", "Викторина «Полюбить оперу»", "Глинка в 1842 году"];
-                } finally {
-                    isOperaFetching = false;
+                } catch (err) { 
+                    console.error("Ошибка API:", err);
+                    showMessage("Нужна активация CORS Anywhere!"); 
                 }
             }
 
             if (operaItems.length > 0) {
-                showMessage(operaItems[operaIndex]);
+                const item = operaItems[operaIndex];
+                showMessage(item.title);
+
+                if (item.img) {
+                    overlayImg.src = item.img;
+                    imgOverlay.style.display = 'flex';
+                    
+                    clearTimeout(window.imgTimer);
+                    window.imgTimer = setTimeout(() => {
+                        imgOverlay.style.display = 'none';
+                    }, 5500);
+                } else {
+                    imgOverlay.style.display = 'none';
+                }
+
                 operaIndex = (operaIndex + 1) % operaItems.length;
             }
         }
-
        // Хранилище для терминов, чтобы не делать запросы слишком часто
 let securityTerms = [];
 
