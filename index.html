@@ -583,7 +583,6 @@ async function generateRandomNoun() {
         function checkWinCondition() {
             if (currentVal === targetVal && pawns.length === 0) {
                 if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-                alert(`Уровень ${currentLevel} пройден! Ты супер.`);
                 startLevel(currentLevel + 1); 
             } else if (pawns.length === 0) {
                 if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
