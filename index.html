@@ -179,7 +179,7 @@ async function showNextIntrovertCourse() {
 
         try {
             // Используем CORS прокси, чтобы браузер не блокировал запрос
-            const proxy = "https://cors-anywhere.herokuapp.com/";
+            const proxy = "https://ancient-base-af2e.botrazumniy.workers.dev/";
             const url = "https://api.artforintrovert.ru/api/v3/courses?limit=24&offset=0&enableLanguages=true&availability=6";
 
             const res = await fetch(proxy + url);
@@ -240,7 +240,7 @@ async function showNextOperaCourse() {
     if (operaItems.length === 0) {
         showMessage("Загрузка викторины...");
         try {
-            const proxy = "https://cors-anywhere.herokuapp.com/";
+            const proxy = "https://ancient-base-af2e.botrazumniy.workers.dev/";
             
             // 1. Запрос списка подборок
             const compilationsUrl = "https://api.artforintrovert.ru/api/v3/compilations";
