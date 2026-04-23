@@ -475,9 +475,9 @@ async function generateRandomNoun() {
         }
 
         function startLevel(level) {
-            const colors = ['#769656', '#4b7399', '#8ca2ad', '#b58863']; // Зеленый, Синий, Серый, Коричневый
-            const color = colors[Math.floor((level - 1) / 5) % colors.length];
-            document.documentElement.style.setProperty('--board-dark', color);
+            const boardColors = ['#769656', '#4b7399', '#8ca2ad', '#b58863']; // Зеленый, Синий, Серый, Коричневый
+            const randomColor = boardColors[Math.floor(Math.random() * boardColors.length)];
+            document.documentElement.style.setProperty('--board-dark', randomColor);
             currentLevel = level;
             levelEl.innerText = currentLevel;
             currentVal = 1; 
@@ -588,7 +588,7 @@ async function generateRandomNoun() {
             if (currentVal === targetVal && pawns.length === 0) {
                 if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
                 startLevel(currentLevel + 1); 
-                showMessage("🎉 ВЕЛИКОЛЕПНО! 🎉");
+                showMessage("ВЕЛИКОЛЕПНО!");
             } else if (pawns.length === 0) {
                 if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
                 alert(`Итог: ${currentVal}, а нужно: ${targetVal}. Попробуй другой маршрут!`);
