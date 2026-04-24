@@ -43,7 +43,7 @@
 .hint-target {outline: 5px solid #2196F3 !important; outline-offset: -5px; z-index: 15; animation: pulse-hint 1s infinite;}
 
 @keyframes pulse-hint {0% { box-shadow: inset 0 0 10px #fff; opacity: 1; }50% { box-shadow: inset 0 0 30px #fff; opacity: 0.7; }100% { box-shadow: inset 0 0 10px #fff; opacity: 1; }}
-        #message { margin-top: 20px; height: 20px; color: #ffeb3b; font-weight: bold; font-size: 14px; text-align: center; }
+        #message { margin-top: 15px; height: 30px; color: #ffeb3b; font-weight: bold; font-size: 14px; text-align: center; }
     </style>
 </head>
 <body>
@@ -249,24 +249,34 @@ async function showNextOperaCourse() {
             
             // Проверяем, что ответ содержит массив compilations и берем id первого элемента
             if (compJson.data && compJson.data.compilations && compJson.data.compilations.length > 0) {
-                const firstId = compJson.data.compilations[0].id;
+                const comps = compJson.data.compilations;
                 
-                // 2. Делаем запрос уже по конкретной подборке с полученным id
-                const url = `https://api.artforintrovert.ru/api/v3/compilations/${firstId}`;
-                const res = await fetch(proxy + url);
-                const json = await res.json();
+                // Создаем список ID: первый и последний (если подборок больше одной)
+                let idsToFetch = [comps[0].id];
+                if (comps.length > 1) {
+                    idsToFetch.push(comps[comps.length - 1].id);
+                }
 
-                if (json.data && json.data.compilation) {
-                    const comp = json.data.compilation;
-                    // Первая в списке - сама викторина (без картинки)
-                    operaItems.push({ title: comp.title, img: null });
-                    
-                    comp.courses.forEach(c => {
-                        operaItems.push({ 
-                            title: c.title, 
-                            img: c.previewImages ? c.previewImages.mobile : null 
+                // Последовательно загружаем данные для каждого ID
+                for (const id of idsToFetch) {
+                    const url = `https://api.artforintrovert.ru/api/v3/compilations/${id}`;
+                    const res = await fetch(proxy + url);
+                    const json = await res.json();
+
+                    if (json.data && json.data.compilation) {
+                        const comp = json.data.compilation;
+                        
+                        // Добавляем заголовок самой подборки
+                        operaItems.push({ title: `--- ${comp.title} ---`, img: null });
+                        
+                        // Добавляем курсы этой подборки
+                        comp.courses.forEach(c => {
+                            operaItems.push({ 
+                                title: c.title, 
+                                img: c.previewImages ? c.previewImages.mobile : null 
+                            });
                         });
-                    });
+                    }
                 }
             } else {
                 showMessage("Подборки не найдены!");
