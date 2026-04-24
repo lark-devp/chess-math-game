@@ -251,13 +251,21 @@ async function showNextOperaCourse() {
             if (compJson.data && compJson.data.compilations && compJson.data.compilations.length > 0) {
                 const comps = compJson.data.compilations;
                 
-                // Создаем список ID: первый и последний (если подборок больше одной)
-                let idsToFetch = [comps[0].id];
-                if (comps.length > 1) {
+                // Формируем список нужных ID
+                let idsToFetch = [];
+                
+                // Добавляем 1-й (индекс 0)
+                idsToFetch.push(comps[0].id);
+                
+                // Проверяем, есть ли 5-й элемент (индекс 4), и добавляем его
+                if (comps.length >= 6) {
+                    idsToFetch.push(comps[5].id);
+                } else if (comps.length > 1) {
+                    // Если 5-й подборки нет, берем просто самую последнюю из доступных
                     idsToFetch.push(comps[comps.length - 1].id);
                 }
 
-                // Последовательно загружаем данные для каждого ID
+                // Загружаем данные по выбранным ID
                 for (const id of idsToFetch) {
                     const url = `https://api.artforintrovert.ru/api/v3/compilations/${id}`;
                     const res = await fetch(proxy + url);
@@ -266,10 +274,9 @@ async function showNextOperaCourse() {
                     if (json.data && json.data.compilation) {
                         const comp = json.data.compilation;
                         
-                        // Добавляем заголовок самой подборки
-                        operaItems.push({ title: `--- ${comp.title} ---`, img: null });
+                        // Заголовок подборки для красоты
+                        operaItems.push({ title: `🔹 ${comp.title} 🔹`, img: null });
                         
-                        // Добавляем курсы этой подборки
                         comp.courses.forEach(c => {
                             operaItems.push({ 
                                 title: c.title, 
@@ -278,6 +285,7 @@ async function showNextOperaCourse() {
                         });
                     }
                 }
+                showMessage("Данные подгружены!");
             } else {
                 showMessage("Подборки не найдены!");
             }
